@@ -1,0 +1,14 @@
+[Unit]
+Description=Batch No Check Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/TradeServicePlatform/check-repair-service
+ExecStart=/home/TradeServicePlatform/check-repair-service/myenv/bin/python /home/TradeServicePlatform/check-repair-service/check_batch_no.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

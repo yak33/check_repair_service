@@ -1,0 +1,31 @@
+# 数据库配置
+DB_CONFIG = {
+    'host': 'localhost',  # 数据库主机地址
+    'user': 'username',   # 用户名
+    'password': 'password',  # 密码
+    'database': 'database_name',  # 数据库名
+    'port': 3306,  # 端口
+    'charset': 'utf8mb4'  # 字符集
+}
+
+# 邮件配置
+EMAIL_CONFIG = {
+    'smtp_server': 'smtp.example.com',  # SMTP服务器地址
+    'smtp_port': 465,  # SMTP端口
+    'sender_email': 'sender@example.com',  # 发件人邮箱
+    'sender_password': 'your_password',  # 发件人密码
+    'receiver_email': 'receiver@example.com'  # 收件人邮箱
+}
+
+# 日志配置
+LOG_CONFIG = {
+    'dir': 'logs',  # 日志目录
+    'file': 'batch_check.log',  # 日志文件名
+    'level': 'INFO',  # 日志级别：DEBUG, INFO, WARNING, ERROR, CRITICAL
+    'format': '%(asctime)s - %(levelname)s - %(message)s'  # 日志格式
+}
+
+# 调度配置
+SCHEDULE_CONFIG = {
+    # 可在此添加更多调度相关的配置
+} 
