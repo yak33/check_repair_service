@@ -4,6 +4,7 @@ import pymysql
 import smtplib
 import logging
 import os
+from logging.handlers import TimedRotatingFileHandler
 from email.mime.text import MIMEText
 from email.header import Header
 from datetime import datetime
@@ -13,17 +14,51 @@ from config import DB_CONFIG, EMAIL_CONFIG, LOG_CONFIG, SCHEDULE_CONFIG
 LOG_DIR = LOG_CONFIG['dir']
 os.makedirs(LOG_DIR, exist_ok=True)
 
-# 配置日志
-LOG_FILE = os.path.join(LOG_DIR, LOG_CONFIG['file'])
+# 配置按日期分割的日志
+def setup_logger():
+    # 创建logger
+    logger = logging.getLogger()
+    logger.setLevel(getattr(logging, LOG_CONFIG['level']))
+    
+    # 清除现有的handlers
+    logger.handlers.clear()
+    
+    # 日志文件名（不包含扩展名）
+    log_filename = LOG_CONFIG['file'].rsplit('.', 1)[0]  # 去掉.log扩展名
+    log_filepath = os.path.join(LOG_DIR, log_filename)
+    
+    # 创建按日期分割的文件处理器
+    # 从配置文件中获取轮转参数
+    rotation_config = LOG_CONFIG.get('rotation', {})
+    file_handler = TimedRotatingFileHandler(
+        filename=f"{log_filepath}.log",
+        when=rotation_config.get('when', 'D'),              # 按天分割 (D=days, H=hours, M=minutes)
+        interval=rotation_config.get('interval', 1),        # 轮转间隔
+        backupCount=rotation_config.get('backup_count', 30), # 保留的备份文件数量
+        encoding=rotation_config.get('encoding', 'utf-8'),
+        delay=False,
+        utc=False          # 使用本地时间
+    )
+    
+    # 设置日志文件名格式：原文件名_YYYY-MM-DD.log
+    file_handler.suffix = "%Y-%m-%d.log"
+    
+    # 设置日志格式
+    formatter = logging.Formatter(LOG_CONFIG['format'])
+    file_handler.setFormatter(formatter)
+    
+    # 创建控制台处理器
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(formatter)
+    
+    # 添加处理器到logger
+    logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
+    
+    return logger
 
-logging.basicConfig(
-    level=getattr(logging, LOG_CONFIG['level']),
-    format=LOG_CONFIG['format'],
-    handlers=[
-        logging.FileHandler(LOG_FILE, encoding='utf-8'),
-        logging.StreamHandler()
-    ]
-)
+# 初始化日志配置
+setup_logger()
 
 def check_batch_no():
     try:
@@ -123,10 +158,11 @@ def send_email(subject, content, is_html=False):
         logging.error(f"发送邮件失败: {str(e)}")
 
 def main():
-    # 设置每小时整点执行一次
-    schedule.every().hour.at(":00").do(check_batch_no)
+    # 设置每天指定时间执行一次
+    check_time = SCHEDULE_CONFIG['check_time']
+    schedule.every().day.at(check_time).do(check_batch_no)
     
-    logging.info("服务已启动，将在每小时整点执行检查...")
+    logging.info(f"服务已启动，将在每天{check_time}执行检查...")
     
     # 立即执行一次检查
     # check_batch_no()
